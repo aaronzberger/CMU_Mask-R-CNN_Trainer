@@ -12,9 +12,8 @@ from utils import data_path, get_custom_config, register_dataset
 #########################################################
 # PARAMETERS
 
-# image_dir = os.path.join(data_path, 'test', 'images')
+# image_dir = '/home/frc/catkin_ws/src/stalk_detect/masks/pred/'
 image_dir = '/home/frc/Downloads/corn_novel'
-fps = 1  # frames per second of the video
 #########################################################
 
 register_dataset('train')
@@ -26,10 +25,6 @@ os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
 predictor = DefaultPredictor(cfg)
 
-example_image = cv2.imread(os.path.join(image_dir, os.listdir(image_dir)[0]), cv2.IMREAD_COLOR)
-height, width, channels = example_image.shape
-out = cv2.VideoWriter(os.path.join(cfg.OUTPUT_DIR, 'video.avi'), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (width, height))
-
 filenames = sorted(os.listdir(image_dir))
 
 v = VideoVisualizer(metadata=train_metadata, instance_mode=ColorMode.IMAGE_BW)
@@ -39,6 +34,4 @@ for filename in tqdm(iterable=filenames, total=len(filenames)):
     outputs = predictor(image)
     visualization = v.draw_instance_predictions(image[:, :, ::-1], outputs['instances'].to('cpu'))
     visualization = cv2.cvtColor(visualization.get_image(), cv2.COLOR_RGB2BGR)
-    out.write(visualization)
-
-out.release()
+    cv2.imwrite(os.path.join(image_dir, '{}_pred.png'.format(filename.split('.')[0])), visualization)

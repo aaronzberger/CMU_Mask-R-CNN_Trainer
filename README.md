@@ -20,11 +20,14 @@ Split your images into a `train` and a `test` folder.
 ### Labeling
 For this library, labels should be in the COCO format.
 
-Use this free [labeling tool](https://github.com/jsbroks/coco-annotator) to annotate your images.
+Use this free [labeling tool](https://github.com/aaronzberger/salt) to annotate your images.
 
 Feel free to label any number of classes. Just remember to update the `num_classes` variable in `utils.py` to reflect.
 
 For both the `train` and `test` images, export the labels to a json file. Name them `train.json` and `test.json`.
+
+### Data Splitting, etc
+Use the [pyodi](https://github.com/Gradiant/pyodi) package for combine coco files, merging annotations, splitting into train and test, etc.
 
 ### Organization
 

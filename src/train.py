@@ -1,11 +1,12 @@
 import json
 import os
 
-from detectron2.engine import DefaultTrainer
 from detectron2.data import DatasetCatalog, MetadataCatalog
-from utils import register_dataset, get_custom_config
+from utils import OUTPUT_PATH, register_dataset, get_custom_config
 import utils
 import matplotlib.pyplot as plt
+from utils import Trainer
+from detectron2.engine import hooks
 
 register_dataset(split='train')
 train_metadata, dataset_dicts = MetadataCatalog.get('coco-train'), DatasetCatalog.get('coco-train')
@@ -18,9 +19,12 @@ if os.path.exists(cfg.OUTPUT_DIR + '/metrics.json'):
     os.remove(cfg.OUTPUT_DIR + '/metrics.json')
 
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
-trainer = DefaultTrainer(cfg)
+trainer = Trainer(cfg)
+trainer.register_hooks([
+    hooks.EvalHook(0, lambda: trainer.test_with_TTA(cfg, trainer.model))])
 trainer.resume_or_load(resume=False)
 trainer.train()
+
 
 # Load the metrics saved during training to visualize loss
 def load_json_arr(json_path):
@@ -29,14 +33,16 @@ def load_json_arr(json_path):
         for line in f:
             lines.append(json.loads(line))
     return lines
+
+
 experiment_metrics = load_json_arr(cfg.OUTPUT_DIR + '/metrics.json')
 
 plt.rcParams['figure.figsize'] = [15, 8]
 plt.plot(
-    [x['iteration'] for x in experiment_metrics if 'total_loss' in x], 
+    [x['iteration'] for x in experiment_metrics if 'total_loss' in x],
     [x['total_loss'] for x in experiment_metrics if 'total_loss' in x])
 plt.plot(
-    [x['iteration'] for x in experiment_metrics if 'validation_loss' in x], 
+    [x['iteration'] for x in experiment_metrics if 'validation_loss' in x],
     [x['validation_loss'] for x in experiment_metrics if 'validation_loss' in x])
 plt.legend(['total_loss', 'validation_loss'], loc='upper left')
 plt.show()
@@ -49,4 +55,4 @@ Initial model was from: {}
 
 Saved final model to: {}
 
-'''.format(utils.OKGREEN, utils.ENDC, 'COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml', os.path.join(cfg.OUTPUT_DIR, 'model_final.pth')))
+'''.format(utils.OKGREEN, utils.ENDC, 'COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml', os.path.join(cfg.OUTPUT_DIR, OUTPUT_PATH)))
